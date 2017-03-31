@@ -39,7 +39,7 @@ import scmIC
 ProjectName  = 'fsbl'
 
 RootDir      = '.'                          
-SourceDirs   = ['src']
+SourceDirs   = ['src', 'src/xil']
 
 SourceFiles  = []
 
@@ -238,7 +238,11 @@ def compile_c(target, source, env):
     #   Launch compiler
     #
     print 'cc: ' + os.path.basename( str(source[0]) )
-    FLAGS = env['CFLAGS'] + ' ' + env['GCC_W_FLAGS']
+    if 'xil' in str(source[0]):
+        FLAGS = env['CFLAGS']
+    else:
+        FLAGS = env['CFLAGS'] + ' ' + env['GCC_W_FLAGS']
+
     cmd = env['CC'] + FLAGS + ' -o ' + str(target[0]) + ' ' + str(source[0])
     #print cmd 
     rcode, out, err = utils.pexec(cmd)
@@ -271,10 +275,10 @@ def compile_cpp(target, source, env):
     #   Launch compiler
     #
     print 'cc: ' + os.path.basename( str(source[0]) )
-#   if HWLIB in str(source[0]):
-#       FLAGS = env['CXXFLAGS']
-#   else:
-    FLAGS = env['CXXFLAGS'] + ' ' + env['GCC_W_FLAGS']
+    if 'xil' in str(source[0]):
+        FLAGS = env['CXXFLAGS']
+    else:
+        FLAGS = env['CXXFLAGS'] + ' ' + env['GCC_W_FLAGS']
     cmd = env['CC'] + FLAGS + ' -o ' + str(target[0]) + ' ' + os.path.abspath(str(source[0]))
     rcode, out, err = utils.pexec(cmd)
     out += err
