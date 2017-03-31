@@ -1,0 +1,12 @@
+bin/*
+lst/*
+obj/*
+cfg/*.ld
+src/version.h
+.sconsign.dblite
+*.pyc
+*.out
+*.dat
+*.vpwhist*
+*.vtg
+
