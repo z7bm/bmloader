@@ -54,11 +54,16 @@
             <F N="src/boot.S"/>
             <F N="src/cpu_init.S"/>
             <F N="src/crt.S"/>
+            <F N="src/exc.cpp"/>
+            <F N="src/main.cpp"/>
             <F N="src/startup.c"/>
+            <F N="src/translation_table.S"/>
         </Folder>
         <Folder
             Name="Header Files"
-            Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if"></Folder>
+            Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+            <F N="src/ps7int.h"/>
+        </Folder>
         <Folder
             Name="Scripts"
             Filters="">
