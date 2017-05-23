@@ -82,31 +82,31 @@ _vector_table:
 IRQHandler:                 /* IRQ vector handler */
 
     stmdb   sp!,{r0-r3,r12,lr}      /* state save from compiled code*/
-//#ifdef __ARM_NEON__
-//    vpush {d0-d7}
-//    vpush {d16-d31}
-//    vmrs r1, FPSCR
-//    push {r1}
-//    vmrs r1, FPEXC
-//    push {r1}
-//#endif
-//
-//#ifdef PROFILING
-//    ldr r2, =prof_pc
-//    subs    r3, lr, #0
-//    str r3, [r2]
-//#endif
+#ifdef __ARM_NEON__
+      vpush {d0-d7}
+      vpush {d16-d31}
+      vmrs r1, FPSCR
+      push {r1}
+      vmrs r1, FPEXC
+      push {r1}
+#endif
+
+#ifdef PROFILING
+      ldr r2, =prof_pc
+      subs    r3, lr, #0
+      str r3, [r2]
+#endif
 
     bl  IRQInterrupt            /* IRQ vector */
 
-//#ifdef __ARM_NEON__
-//    pop     {r1}
-//    vmsr    FPEXC, r1
-//    pop     {r1}
-//    vmsr    FPSCR, r1
-//    vpop    {d16-d31}
-//    vpop    {d0-d7}
-//#endif
+#ifdef __ARM_NEON__
+      pop     {r1}
+      vmsr    FPEXC, r1
+      pop     {r1}
+      vmsr    FPSCR, r1
+      vpop    {d16-d31}
+      vpop    {d0-d7}
+#endif
     ldmia   sp!,{r0-r3,r12,lr}      /* state restore from compiled code */
 
 
