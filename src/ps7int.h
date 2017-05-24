@@ -34,43 +34,9 @@
 #ifndef PS7INT_H
 #define PS7INT_H
 
-#include <stdint.h>
+#include "ps7common.h"
 #include <ps7mmrs.h>
 
-#ifndef INLINE
-#define INLINE __attribute__((__always_inline__)) inline
-#endif
-
-//------------------------------------------------------------------------------
-INLINE void write_mmr(uintptr_t addr, const uint32_t data)
-{
-    *( reinterpret_cast<volatile uint32_t*>(addr) ) =  data;
-}
-//------------------------------------------------------------------------------
-INLINE uint32_t read_mmr(uintptr_t addr)
-{
-    return *( reinterpret_cast<volatile uint32_t*>(addr) );
-}
-//------------------------------------------------------------------------------
-INLINE void set_mmr_bits(uintptr_t addr, const uint32_t mask)
-{
-    *( reinterpret_cast<volatile uint32_t*>(addr) ) |=  mask;
-}
-//------------------------------------------------------------------------------
-INLINE void set_mmr_bits(uintptr_t addr, const uint32_t mask, const uint32_t bfmask)
-{
-    uint32_t reg = *( reinterpret_cast<volatile uint32_t*>(addr) );
-
-    reg &= ~bfmask;
-    reg |=  mask;
-    *( reinterpret_cast<volatile uint32_t*>(addr) ) = reg;
-
-}
-//------------------------------------------------------------------------------
-INLINE void clr_mmr_bits(uintptr_t addr, const uint32_t mask)
-{
-    *( reinterpret_cast<volatile uint32_t*>(addr) ) &= ~mask;
-}
 //------------------------------------------------------------------------------
 INLINE void gic_int_enable(const uint32_t id)
 {
@@ -78,7 +44,7 @@ INLINE void gic_int_enable(const uint32_t id)
     const uint32_t  BIT_MASK     = 0x1ul << id%32;
     const uintptr_t ICDISER_ADDR = GIC_ICDISER0 + REG_INDEX*4;
 
-    write_mmr(ICDISER_ADDR, BIT_MASK);
+    write_pa(ICDISER_ADDR, BIT_MASK);
 }
 //------------------------------------------------------------------------------
 INLINE void gic_int_disable(const uint32_t id)
@@ -87,7 +53,7 @@ INLINE void gic_int_disable(const uint32_t id)
     const uint32_t  BIT_POS      = id%32;
     const uintptr_t ICDISER_ADDR = GIC_ICDISER0 + REG_INDEX*4;
 
-    write_mmr(ICDISER_ADDR, 0x1ul << BIT_POS);
+    write_pa(ICDISER_ADDR, 0x1ul << BIT_POS);
 }
 //------------------------------------------------------------------------------
 INLINE void gic_set_target(const uint32_t id, uint32_t trg)
@@ -96,7 +62,7 @@ INLINE void gic_set_target(const uint32_t id, uint32_t trg)
     const uint32_t  BIT_MASK     = trg << (id%4)*8;
     const uintptr_t ICDIPTR_ADDR = GIC_ICDIPTR0 + REG_INDEX*4;
 
-    set_mmr_bits(ICDIPTR_ADDR, BIT_MASK);
+    set_bits_pa(ICDIPTR_ADDR, BIT_MASK);
 }
 //------------------------------------------------------------------------------
 INLINE void gic_set_config(const uint32_t id, uint32_t cfg)
@@ -105,7 +71,7 @@ INLINE void gic_set_config(const uint32_t id, uint32_t cfg)
     const uint32_t  BIT_MASK     = cfg << (id%16)*2;
     const uintptr_t ICDIPTR_ADDR = GIC_ICDIPTR0 + REG_INDEX*4;
 
-    set_mmr_bits(ICDIPTR_ADDR, BIT_MASK);
+    set_bits_pa(ICDIPTR_ADDR, BIT_MASK);
 }
 //------------------------------------------------------------------------------
 INLINE void gic_set_priority(const uint32_t id, uint32_t pr)
@@ -114,7 +80,7 @@ INLINE void gic_set_priority(const uint32_t id, uint32_t pr)
     const uint32_t  BIT_MASK     = pr << (id%4)*8;
     const uintptr_t ICDIPR_ADDR = GIC_ICDIPR0 + REG_INDEX*4;
 
-    set_mmr_bits(ICDIPR_ADDR, BIT_MASK);
+    set_bits_pa(ICDIPR_ADDR, BIT_MASK);
 }
 //------------------------------------------------------------------------------
 INLINE void gic_set_pending(const uint32_t id)
@@ -123,7 +89,7 @@ INLINE void gic_set_pending(const uint32_t id)
     const uint32_t  BIT_MASK     = 0x1ul << id%32;
     const uintptr_t ICDISPR_ADDR = GIC_ICDISPR0 + REG_INDEX*4;
 
-    write_mmr(ICDISPR_ADDR, BIT_MASK);
+    write_pa(ICDISPR_ADDR, BIT_MASK);
 }
 //------------------------------------------------------------------------------
 enum TGicConfigField
@@ -329,6 +295,42 @@ const uint32_t PS7IRQ_ID_PL15        = 91;   // Rising edge/Hight level, SPI STS
 
 const uint32_t PS7IRQ_ID_SCU_PARITY  = 92;   // Rising edge, SPI STS1 [28]
 
+const uint32_t PS7_MAX_IRQ_ID        = PS7IRQ_ID_SCU_PARITY;
+
+//------------------------------------------------------------------------------
+//
+//    ISR Handlers
+//
+typedef void (*TISRHandler)();
+
+void ps7_register_isr_handler(TISRHandler ptr, uint32_t id);
+
+
+//------------------------------------------------------------------------------
+//
+//    GPIO support
+// 
+INLINE void gpio_int_en(const uint32_t id)
+{
+    const uint32_t  REG_ADDR = GPIO_INT_EN_0_REG + id/32*0x40;
+    const uint32_t  BIT_MASK = 0x1ul << id%32;
+
+    write_pa(REG_ADDR, BIT_MASK);
+}
+//------------------------------------------------------------------------------
+enum TGpioIntPol : uint32_t
+{
+    GPIO_INT_POL_LOW_FALL  = 0,
+    GPIO_INT_POL_HIGH_RISE = 1
+};
+
+INLINE void gpio_int_pol(const uint32_t id, const TGpioIntPol)
+{
+    const uint32_t  REG_ADDR = GPIO_INT_POLARITY_0_REG + id/32*0x40;
+    const uint32_t  BIT_MASK = 0x1ul << id%32;
+
+    set_bits_pa(REG_ADDR, BIT_MASK);
+}
 //------------------------------------------------------------------------------
 
 #endif  // PS7INT_H

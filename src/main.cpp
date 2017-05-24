@@ -6,45 +6,28 @@
                
 const uint32_t PIN_INT = 50;
 
-//------------------------------------------------------------------------------
-INLINE void gpio_int_en(const uint32_t id)
-{
-    const uint32_t  REG_ADDR = GPIO_INT_EN_0_REG + id/32*0x40;
-    const uint32_t  BIT_MASK = 0x1ul << id%32;
+void swi_isr_handler();
+void gpio_isr_handler();
 
-    write_mmr(REG_ADDR, BIT_MASK);
-}
-//------------------------------------------------------------------------------
-enum TGpioIntPol : uint32_t
-{
-    GPIO_INT_POL_LOW_FALL  = 0,
-    GPIO_INT_POL_HIGH_RISE = 1
-};
-
-INLINE void gpio_int_pol(const uint32_t id, const TGpioIntPol)
-{
-    const uint32_t  REG_ADDR = GPIO_INT_POLARITY_0_REG + id/32*0x40;
-    const uint32_t  BIT_MASK = 0x1ul << id%32;
-
-    set_mmr_bits(REG_ADDR, BIT_MASK);
-}
 //------------------------------------------------------------------------------
 int main() 
 { 
     ps7_init();
     
-    set_mmr_bits(GPIO_DIRM_0_REG, 1ul << 7);
-    set_mmr_bits(GPIO_OEN_0_REG,  1ul << 7);
-    set_mmr_bits(GPIO_DATA_0_REG, 1ul << 7);
+    set_bits_pa(GPIO_DIRM_0_REG, 1ul << 7);
+    set_bits_pa(GPIO_OEN_0_REG,  1ul << 7);
+    set_bits_pa(GPIO_DATA_0_REG, 1ul << 7);
     
-    set_mmr_bits(GPIO_DIRM_0_REG, 1ul << 16);
-    set_mmr_bits(GPIO_OEN_0_REG,  1ul << 16);
-    set_mmr_bits(GPIO_DATA_0_REG, 1ul << 16);
+    set_bits_pa(GPIO_DIRM_0_REG, 1ul << 16);
+    set_bits_pa(GPIO_OEN_0_REG,  1ul << 16);
+    set_bits_pa(GPIO_DATA_0_REG, 1ul << 16);
 
     //clr_mmr_bits(MIO_PIN_50_REG, MIO_PIN_50_PULLUP_MASK); // turn off pullup resistor
     
     
-    asm volatile ("    nop");
+    //ps7_register_isr_handler(&swi_isr_handler, PS7IRQ_ID_SW7);
+    ps7_register_isr_handler(&gpio_isr_handler, PS7IRQ_ID_GPIO);
+    
     // set up GPIO interrupt
     gpio_int_pol(PIN_INT, GPIO_INT_POL_HIGH_RISE);
     gpio_int_en(PIN_INT);
@@ -58,13 +41,13 @@ int main()
         gic_int_enable(PS7IRQ_ID_GPIO);
         gic_set_target(PS7IRQ_ID_GPIO, 0x01);
         
-        set_mmr_bits(GIC_ICCPMR, 0xff);
+        set_bits_pa(GIC_ICCPMR, 0xff);
         asm volatile ("    nop");
         gic_set_priority(PS7IRQ_ID_SW7, 0x10);
         
         
-        set_mmr_bits(GIC_ICDDCR, 0x1);
-        set_mmr_bits(GIC_ICCICR, 0x3);
+        set_bits_pa(GIC_ICDDCR, 0x1);
+        set_bits_pa(GIC_ICCICR, 0x3);
     }
 
     enable_interrupts();
@@ -85,7 +68,7 @@ int main()
     
 //    gic_set_pending(PS7IRQ_ID_UART0);    
                                                                     
-    //set_mmr_bits( GIC_ICDSGIR, 0x02F00000, GIC_ICDSGIR_TARGET_LIST_FILTER_MASK);                            
+    //set_bits_pa( GIC_ICDSGIR, 0x02F00000, GIC_ICDSGIR_TARGET_LIST_FILTER_MASK);                            
     
   //  volatile uint32_t isr_id = 0;
 //    uint16_t val = 1ul << 7;
@@ -110,6 +93,17 @@ int main()
 
 //        isr_id = *(reinterpret_cast<uint32_t*>(GIC_ICCIAR));
     }
+}
+//------------------------------------------------------------------------------
+void gpio_isr_handler()
+{
+    write_pa(GPIO_INT_STAT_1_REG, 1ul << 18);
+    volatile const uint32_t GPIO_INT_STS = read_pa(GPIO_INT_STAT_1_REG);
+}
+//------------------------------------------------------------------------------
+void swi_isr_handler()
+{
+    __nop();
 }
 //------------------------------------------------------------------------------
 
