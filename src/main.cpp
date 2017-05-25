@@ -24,10 +24,17 @@ int main()
 
     //clr_mmr_bits(MIO_PIN_50_REG, MIO_PIN_50_PULLUP_MASK); // turn off pullup resistor
     
+    //-----------------------------------------------
+    // initialize interrupt handlers table
+    for(uint32_t i = 0; i < PS7_MAX_IRQ_ID; ++i)
+    {
+        ps7_register_isr_handler(&default_isr_handler, i);
+    }
     
-    //ps7_register_isr_handler(&swi_isr_handler, PS7IRQ_ID_SW7);
+    ps7_register_isr_handler(&swi_isr_handler, PS7IRQ_ID_SW7);
     ps7_register_isr_handler(&gpio_isr_handler, PS7IRQ_ID_GPIO);
     
+    //-----------------------------------------------
     // set up GPIO interrupt
     gpio_int_pol(PIN_INT, GPIO_INT_POL_HIGH_RISE);
     gpio_int_en(PIN_INT);
@@ -98,12 +105,22 @@ int main()
 void gpio_isr_handler()
 {
     write_pa(GPIO_INT_STAT_1_REG, 1ul << 18);
-    volatile const uint32_t GPIO_INT_STS = read_pa(GPIO_INT_STAT_1_REG);
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | (1ul << 7) );
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | 0 );
 }
 //------------------------------------------------------------------------------
 void swi_isr_handler()
 {
     __nop();
+    write_pa(GPIO_MASK_DATA_0_MSW_REG, (~(1ul << 0) << 16) | (1ul << 0) );
+    write_pa(GPIO_MASK_DATA_0_MSW_REG, (~(1ul << 0) << 16) | 0 );
+}
+//------------------------------------------------------------------------------
+void default_isr_handler()
+{
+    __nop();
+    __dsb();
+    __isb();
 }
 //------------------------------------------------------------------------------
 
