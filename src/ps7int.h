@@ -69,9 +69,9 @@ INLINE void gic_set_config(const uint32_t id, uint32_t cfg)
 {
     const uint32_t  REG_INDEX    = id/16;
     const uint32_t  BIT_MASK     = cfg << (id%16)*2;
-    const uintptr_t ICDIPTR_ADDR = GIC_ICDIPTR0 + REG_INDEX*4;
+    const uintptr_t ICDICFR_ADDR = GIC_ICDICFR0 + REG_INDEX*4;
 
-    set_bits_pa(ICDIPTR_ADDR, BIT_MASK);
+    set_bits_pa(ICDICFR_ADDR, BIT_MASK);
 }
 //------------------------------------------------------------------------------
 INLINE void gic_set_priority(const uint32_t id, uint32_t pr)
@@ -310,10 +310,17 @@ void ps7_register_isr_handler(TISRHandler ptr, uint32_t id);
 //
 //    GPIO support
 // 
-INLINE void gpio_int_en(const uint32_t id)
+//    Argument 'pinnum' value is:
+//         
+//         0..31  for bank0
+//        32..53  for bank1
+//        64..95  for bank2
+//        96..128 for bank3
+// 
+INLINE void gpio_int_en(const uint32_t pinnum)
 {
-    const uint32_t  REG_ADDR = GPIO_INT_EN_0_REG + id/32*0x40;
-    const uint32_t  BIT_MASK = 0x1ul << id%32;
+    const uint32_t  REG_ADDR = GPIO_INT_EN_0_REG + pinnum/32*0x40;
+    const uint32_t  BIT_MASK = 0x1ul << pinnum%32;
 
     write_pa(REG_ADDR, BIT_MASK);
 }
@@ -324,12 +331,23 @@ enum TGpioIntPol : uint32_t
     GPIO_INT_POL_HIGH_RISE = 1
 };
 
-INLINE void gpio_int_pol(const uint32_t id, const TGpioIntPol)
+INLINE void gpio_int_pol(const uint32_t pinnum, const TGpioIntPol)
 {
-    const uint32_t  REG_ADDR = GPIO_INT_POLARITY_0_REG + id/32*0x40;
-    const uint32_t  BIT_MASK = 0x1ul << id%32;
+    const uint32_t  REG_ADDR = GPIO_INT_POLARITY_0_REG + pinnum/32*0x40;
+    const uint32_t  BIT_MASK = 0x1ul << pinnum%32;
 
     set_bits_pa(REG_ADDR, BIT_MASK);
+}
+//------------------------------------------------------------------------------
+//
+// 
+INLINE void gpio_clr_int_sts(const uint32_t pinnum)
+{
+    const uint32_t  REG_ADDR = GPIO_INT_STAT_0_REG + pinnum/32*0x40;
+    const uint32_t  BIT_MASK = 0x1ul << pinnum%32;
+
+    write_pa(REG_ADDR, BIT_MASK);  // reset interrupt status
+    
 }
 //------------------------------------------------------------------------------
 
