@@ -8,12 +8,15 @@ const uint32_t PIN_INT = 50;
 
 void swi_isr_handler();
 void gpio_isr_handler();
+void default_isr_handler();
 
 //------------------------------------------------------------------------------
 int main() 
 { 
     ps7_init();
     
+    //-----------------------------------------------
+    // set up output pins
     set_bits_pa(GPIO_DIRM_0_REG, 1ul << 7);
     set_bits_pa(GPIO_OEN_0_REG,  1ul << 7);
     set_bits_pa(GPIO_DATA_0_REG, 1ul << 7);
@@ -21,8 +24,6 @@ int main()
     set_bits_pa(GPIO_DIRM_0_REG, 1ul << 16);
     set_bits_pa(GPIO_OEN_0_REG,  1ul << 16);
     set_bits_pa(GPIO_DATA_0_REG, 1ul << 16);
-
-    //clr_mmr_bits(MIO_PIN_50_REG, MIO_PIN_50_PULLUP_MASK); // turn off pullup resistor
     
     //-----------------------------------------------
     // initialize interrupt handlers table
@@ -36,9 +37,10 @@ int main()
     
     //-----------------------------------------------
     // set up GPIO interrupt
+    gpio_clr_int_sts(PIN_INT);
     gpio_int_pol(PIN_INT, GPIO_INT_POL_HIGH_RISE);
     gpio_int_en(PIN_INT);
-    
+        
     
     {
     //    TCritSect cs;
@@ -47,6 +49,7 @@ int main()
         
         gic_int_enable(PS7IRQ_ID_GPIO);
         gic_set_target(PS7IRQ_ID_GPIO, 0x01);
+        gic_set_config(PS7IRQ_ID_GPIO, GIC_EDGE_SINGLE);
         
         set_bits_pa(GIC_ICCPMR, 0xff);
         asm volatile ("    nop");
@@ -59,46 +62,21 @@ int main()
 
     enable_interrupts();
     
-    
-//  write_mmr_bits( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
-//                 (2 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
-//                 PS7IRQ_ID_SW15                                 // rise software interrupt ID15
-//                 );
-          
-    //write_mmr_bits(GIC_ICDISR0, 1ul << PS7IRQ_ID_SW15);                                                      
-//  write_mmr( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
-//            (0 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
-//            (0x01 << GIC_ICDSGIR_CPU_TARGET_LIST_BPOS) +   //
-//            //(1ul << GIC_ICDSGIR_SBZ_BPOS)              +   //
-//             PS7IRQ_ID_SW7                                 // rise software interrupt ID15
-//           );
-    
-//    gic_set_pending(PS7IRQ_ID_UART0);    
-                                                                    
-    //set_bits_pa( GIC_ICDSGIR, 0x02F00000, GIC_ICDSGIR_TARGET_LIST_FILTER_MASK);                            
-    
-  //  volatile uint32_t isr_id = 0;
-//    uint16_t val = 1ul << 7;
     for(;;)
     {
         asm volatile ("    nop");
         asm volatile ("    nop");
 
-//        write_mmr(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | val );
+        write_pa( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
+                 (2 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
+                  PS7IRQ_ID_SW7                                 // rise software interrupt ID15
+                );
 
-//      write_mmr(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | (1ul << 7) );
-//      write_mmr(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | (0ul << 7) );
-        
-//      write_mmr( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
-//                (0 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
-//                (0x01 << GIC_ICDSGIR_CPU_TARGET_LIST_BPOS) +   //
-//                 PS7IRQ_ID_SW7                                 // rise software interrupt ID15
-//               );
-
-//      asm volatile ("    nop");
-//      asm volatile ("    nop");
-
-//        isr_id = *(reinterpret_cast<uint32_t*>(GIC_ICCIAR));
+//      write_pa( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
+//               (0 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
+//               (0x01 << GIC_ICDSGIR_CPU_TARGET_LIST_BPOS) +   //
+//                PS7IRQ_ID_SW7                                 // rise software interrupt ID15
+//              );
     }
 }
 //------------------------------------------------------------------------------
