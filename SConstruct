@@ -39,7 +39,7 @@ import scmIC
 ProjectName  = 'fsbl'
 
 RootDir      = '.'                          
-SourceDirs   = ['src', 'src/xil']
+SourceDirs   = ['src', 'src/xil', '/opt/cad/xilinx/zynq7000/ps7mmrs/const']
 
 SourceFiles  = []
 
@@ -50,7 +50,7 @@ SourceFiles  = []
 #
 #MCU          = 'stm32f2xx'
 
-Optimization =' -O2 '
+Optimization =' -O3 '
 DebugLevel   =' -g3 '          # empty to disable debug info
 
 ExtraFlags    = ' '# + ' -DNDEBUG '
@@ -163,7 +163,6 @@ ToolkitLibPath = [TOOLKIT_PATH]
 IncludePath = ''.join(' -I' + i for i in SourceDirs + ToolkitIncPath)
 LibraryPathOptions = ''#.join(' -L ' + i for i in ToolkitLibPath)
 
-
 LinkerMainScript   = os.path.join(ConfigDir, 'fsbl.' + LdExt)
                  
 #-------------------------------------------------------------------------------
@@ -176,6 +175,7 @@ FLAGS    += ' -mtune=cortex-a9'
 FLAGS    += ' -mfloat-abi=hard' 
 FLAGS    += ' -mfpu=vfpv3' 
 FLAGS    += IncludePath
+FLAGS    += Optimization
 FLAGS    += DebugLevel
 FLAGS    += ' -pipe'
 FLAGS    += ' -ffunction-sections -fdata-sections'
