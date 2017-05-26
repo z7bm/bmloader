@@ -2,7 +2,8 @@
 <Project
     Version="10.0"
     VendorName="SlickEdit"
-    WorkingDir=".">
+    WorkingDir="."
+    TagFile="Project">
     <Config
         Name="Release"
         OutputFile=""
@@ -53,9 +54,10 @@
             <F N="src/asm_vectors.S"/>
             <F N="src/boot.S"/>
             <F N="src/cpu_init.S"/>
-            <F N="src/crt.S"/>
             <F N="src/exc.cpp"/>
             <F N="src/main.cpp"/>
+            <F N="src/ps7common.h"/>
+            <F N="src/ps7int.cpp"/>
             <F N="src/startup.c"/>
             <F N="src/translation_table.S"/>
         </Folder>
