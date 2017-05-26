@@ -25,6 +25,17 @@ int main()
     set_bits_pa(GPIO_OEN_0_REG,  1ul << 16);
     set_bits_pa(GPIO_DATA_0_REG, 1ul << 16);
     
+    //  JE1
+    set_bits_pa(GPIO_DIRM_0_REG, 1ul << 13);
+    set_bits_pa(GPIO_OEN_0_REG,  1ul << 13);
+    set_bits_pa(GPIO_DATA_0_REG, 1ul << 13);
+    
+    //  JE2
+    set_bits_pa(GPIO_DIRM_0_REG, 1ul << 10);
+    set_bits_pa(GPIO_OEN_0_REG,  1ul << 10);
+    set_bits_pa(GPIO_DATA_0_REG, 1ul << 10);
+
+        
     //-----------------------------------------------
     // initialize interrupt handlers table
     for(uint32_t i = 0; i < PS7_MAX_IRQ_ID; ++i)
@@ -84,8 +95,12 @@ void gpio_isr_handler()
 {
     //write_pa(GPIO_INT_STAT_1_REG, 1ul << 18);
     gpio_clr_int_sts(PIN_INT);
+
     write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | (1ul << 7) );
     write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | 0 );
+
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | (1ul << 13) );  // JE1
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );
 }
 //------------------------------------------------------------------------------
 void swi_isr_handler()
@@ -93,6 +108,10 @@ void swi_isr_handler()
     __nop();
     write_pa(GPIO_MASK_DATA_0_MSW_REG, (~(1ul << 0) << 16) | (1ul << 0) );
     write_pa(GPIO_MASK_DATA_0_MSW_REG, (~(1ul << 0) << 16) | 0 );
+    
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | (1ul << 10) );  // JE2
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | 0 );
+
 }
 //------------------------------------------------------------------------------
 void default_isr_handler()
