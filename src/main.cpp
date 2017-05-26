@@ -47,9 +47,9 @@ int main()
         gic_int_enable(PS7IRQ_ID_UART0);
         gic_set_target(PS7IRQ_ID_UART0, 0x01);
         
-        gic_int_enable(PS7IRQ_ID_GPIO);
-        gic_set_target(PS7IRQ_ID_GPIO, 0x01);
+        gic_set_target(PS7IRQ_ID_GPIO, 1ul << GIC_CPU0);
         gic_set_config(PS7IRQ_ID_GPIO, GIC_EDGE_SINGLE);
+        gic_int_enable(PS7IRQ_ID_GPIO);
         
         set_bits_pa(GIC_ICCPMR, 0xff);
         asm volatile ("    nop");
@@ -57,7 +57,7 @@ int main()
         
         
         set_bits_pa(GIC_ICDDCR, 0x1);
-        set_bits_pa(GIC_ICCICR, 0x3);
+        set_bits_pa(GIC_ICCICR, 0x1);
     }
 
     enable_interrupts();
@@ -82,7 +82,8 @@ int main()
 //------------------------------------------------------------------------------
 void gpio_isr_handler()
 {
-    write_pa(GPIO_INT_STAT_1_REG, 1ul << 18);
+    //write_pa(GPIO_INT_STAT_1_REG, 1ul << 18);
+    gpio_clr_int_sts(PIN_INT);
     write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | (1ul << 7) );
     write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | 0 );
 }
