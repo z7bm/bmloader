@@ -34,7 +34,7 @@
 #ifndef PS7INT_H
 #define PS7INT_H
 
-#include "z7kcommon.h"
+#include "z7common.h"
 #include <ps7mmrs.h>
 
 //------------------------------------------------------------------------------
