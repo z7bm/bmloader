@@ -1,6 +1,6 @@
 
 #include <stdint.h>
-#include "z7kint.h"
+#include "z7int.h"
 
 extern TISRHandler PS7Handlers[PS7_MAX_IRQ_ID];
 
