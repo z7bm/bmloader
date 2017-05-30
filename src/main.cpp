@@ -1,7 +1,7 @@
 
 #include <ps7mmrs.h>
 #include "ps7_init.h"
-#include "ps7int.h"
+#include "z7kint.h"
 
                
 const uint32_t PIN_INT = 50;
