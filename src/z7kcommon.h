@@ -35,6 +35,7 @@
 #define PS7COMMON_H
 
 #include <stdint.h>
+#include <ps7slcr.h>
 
 #ifndef INLINE
 #define INLINE __attribute__((__always_inline__)) inline
@@ -94,6 +95,9 @@ INLINE uint_fast8_t __clz(uint32_t val)
   return(res);
 }
 
+//------------------------------------------------------------------------------
+INLINE void slcr_lock()   { write_pa(SLCR_LOCK_REG,   0x767B); }
+INLINE void slcr_unlock() { write_pa(SLCR_UNLOCK_REG, 0xDF0D); }
 //------------------------------------------------------------------------------
 
 #endif  // PS7COMMON_H
