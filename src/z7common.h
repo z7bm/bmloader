@@ -67,7 +67,6 @@ INLINE void set_bits_pa(uintptr_t addr, const uint32_t mask, const uint32_t bfma
     reg &= ~bfmask;
     reg |=  mask;
     *( reinterpret_cast<volatile uint32_t*>(addr) ) = reg;
-
 }
 //------------------------------------------------------------------------------
 INLINE void clr_bits_pa(uintptr_t addr, const uint32_t mask)

@@ -2,6 +2,7 @@
 #include <ps7mmrs.h>
 #include "ps7_init.h"
 #include "z7int.h"
+#include "z7qspi.h"
 
                
 const uint32_t PIN_INT = 50;
@@ -9,6 +10,8 @@ const uint32_t PIN_INT = 50;
 void swi_isr_handler();
 void gpio_isr_handler();
 void default_isr_handler();
+
+TQspi Qspi;
 
 //------------------------------------------------------------------------------
 int main() 
@@ -63,7 +66,6 @@ int main()
         gic_int_enable(PS7IRQ_ID_GPIO);
         
         set_bits_pa(GIC_ICCPMR, 0xff);
-        asm volatile ("    nop");
         gic_set_priority(PS7IRQ_ID_SW7, 0x10);
         
         
@@ -73,16 +75,18 @@ int main()
 
     enable_interrupts();
     
+    Qspi.init();
+
     for(;;)
     {
-        asm volatile ("    nop");
-        asm volatile ("    nop");
-
         write_pa( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
                  (2 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
                   PS7IRQ_ID_SW7                                 // rise software interrupt ID15
                 );
 
+        
+        
+        
 //      write_pa( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
 //               (0 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
 //               (0x01 << GIC_ICDSGIR_CPU_TARGET_LIST_BPOS) +   //
