@@ -6,5 +6,10 @@ proc cn { } {
 proc rl { } {
     rst
     dow bin/fsbl.elf
-    con	
+    con 
+}
+
+proc rlc { } {
+    rl
+    con 
 }
