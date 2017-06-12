@@ -62,7 +62,7 @@ void TQSpi::init(bool manmode)
                               QSPI_FIFO_WIDTH_MASK +     //  0b11: 32 bit, the only this value supported
                               QSPI_MODE_SEL_MASK   +     //  Master Mode on
                               QSPI_HOLDB_DR_MASK   +     //  
-                          //    (1ul << QSPI_BAUD_RATE_DIV_BPOS) +
+                          //   (1ul << QSPI_BAUD_RATE_DIV_BPOS) +
                               QSPI_CLK_PH_MASK     +     //
                               QSPI_CLK_POL_MASK;         //
         
@@ -193,9 +193,7 @@ void TQSpi::read(const uint32_t addr, uint32_t count)
         count = 0;
     }
     
-    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | (1ul << 13) );  // JE1
     start_transfer();
-    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );
     for(;;)
     {
         if( count && (read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_TX_FIFO_NOT_FULL_MASK) )
@@ -203,7 +201,7 @@ void TQSpi::read(const uint32_t addr, uint32_t count)
             if(count > CHUNK_SIZE)
             {
                 fill_tx_fifo(CHUNK_SIZE);
-                start_transfer();
+               // start_transfer();
                 count -= CHUNK_SIZE;
             }
             else 

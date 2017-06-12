@@ -74,7 +74,7 @@
 class TQSpi
 {
 public:
-    TQSpi() : RxIndex(0), CmdIndex(0), CfgReg(0), Launch(false) 
+    TQSpi() : RxIndex(), CmdIndex(3), CfgReg(0), Launch(false) 
     { 
     }
     
