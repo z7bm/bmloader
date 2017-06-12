@@ -25,3 +25,22 @@ proc read_id { } {
     
 }
 
+proc rdvar {name {n 1}} {
+    set res [lindex [print &$name] 2]
+    mrd $res $n
+}
+
+proc wrvar {name data} {
+    set res [lindex [print &$name] 2]
+    mwr $res $data
+}
+
+proc rdres { {N 32} } {
+    puts [ rdvar QSpi.RxIndex ]
+    rdvar QSpi.RxBuf $N
+}
+
+proc lnch {} {
+    wrvar QSpi.Launch 1
+}
+
