@@ -11,7 +11,7 @@ void swi_isr_handler();
 void gpio_isr_handler();
 void default_isr_handler();
 
-TQspi Qspi;
+TQSpi QSpi;
 
 //------------------------------------------------------------------------------
 int main() 
@@ -75,14 +75,17 @@ int main()
 
     enable_interrupts();
     
-    Qspi.init();
+    QSpi.init();
 
     for(;;)
     {
-        write_pa( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
-                 (2 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
-                  PS7IRQ_ID_SW7                                 // rise software interrupt ID15
-                );
+        
+        QSpi.run();
+        
+//      write_pa( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
+//               (2 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
+//                PS7IRQ_ID_SW7                                 // rise software interrupt ID15
+//              );
 
         
         
@@ -103,8 +106,8 @@ void gpio_isr_handler()
     write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | (1ul << 7) );
     write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | 0 );
 
-    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | (1ul << 13) );  // JE1
-    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );
+    //write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | (1ul << 13) );  // JE1
+    //write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );
 }
 //------------------------------------------------------------------------------
 void swi_isr_handler()

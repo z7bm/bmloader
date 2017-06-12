@@ -71,27 +71,101 @@
 //    command is issued without manual asserting of nCS line, hardware controls
 //    nCS - asserts before data send/receive and deasserts after.
 //
-class TQspi
+class TQSpi
 {
 public:
-    TQspi() { }
+    TQSpi() : RxIndex(0), CmdIndex(0), Launch(false) 
+    { 
+        
+        
+        for(uint32_t i = 0; i < 4; ++i)
+        {
+            
+        }
+    }
     
     void init(bool manmode = true);
     
     void cs_on  () { clr_bits_pa(QSPI_CONFIG_REG, QSPI_PCS_MASK); }
     void cs_off () { set_bits_pa(QSPI_CONFIG_REG, QSPI_PCS_MASK); }
 
-    void cs_enable  () { set_bits_pa(QSPI_CONFIG_REG, QSPI_MANUAL_CS_MASK); }
-    void cs_disable () { clr_bits_pa(QSPI_CONFIG_REG, QSPI_MANUAL_CS_MASK); }
+    void man_cs_enable  () { set_bits_pa(QSPI_CONFIG_REG, QSPI_MANUAL_CS_MASK); }
+    void man_cs_disable () { clr_bits_pa(QSPI_CONFIG_REG, QSPI_MANUAL_CS_MASK); }
     
     void manual_mode_on  () { set_bits_pa(QSPI_CONFIG_REG, QSPI_MAN_START_EN_MASK); }
     void manual_mode_off () { clr_bits_pa(QSPI_CONFIG_REG, QSPI_MAN_START_EN_MASK); }
     
     void start_transfer  () { set_bits_pa(QSPI_CONFIG_REG, QSPI_MAN_START_COM_MASK); }
     
-    uint32_t read_id() { write_pa(QSPI_TXD0_REG, 0x00000090); return read_pa(QSPI_RX_DATA_REG); }
+  //  uint32_t read_id() { write_pa(QSPI_TXD0_REG, 0x00000090); return read_pa(QSPI_RX_DATA_REG); }
+    
+    void run();
+    
+    enum TCommandCode
+    {
+        // status
+        cmdREAD_ID   = 0x90,
+        cmdRDID      = 0x9f,
+        cmdRES       = 0xab,
+        
+        // register access
+        cmdRDSR1     = 0x05,
+        cmdRDSR2     = 0x07,
+        cmdRDCR      = 0x35,
+        cmdWRR       = 0x01,
+        cmdWRDI      = 0x04,
+        cmdWREN      = 0x06,
+        cmdCLSR      = 0x30,
+        cmdABRD      = 0x14,
+        cmdABWR      = 0x15,
+        cmdBRRD      = 0x16,
+        cmdBRWR      = 0x17,
+        cmdBRAC      = 0xb9,
+        cmdDLPRD     = 0x41,
+        cmdPNVDLR    = 0x43,
+        cmdWVDLR     = 0x4a,
+        
+        // read flash array
+        cmdREAD      = 0x03,
+        cmdFAST_READ = 0x0b,
+        cmdDOR       = 0x3b,
+        cmdQOR       = 0x6b,
+        cmdDIOR      = 0xbb,
+        cmdQIOR      = 0xeb,
+
+        // program flash array
+        cmdPP        = 0x02,
+        cmdQPP       = 0x32,
+
+        // erase flash array
+        cmdP4E       = 0x20,
+        cmdSE        = 0xd8,
+        cmdBE        = 0x60
+    };
+    
+    enum TBufSize
+    {
+        TXBUF_SIZE = 64,
+        RXBUF_SIZE = 1024
+    };
     
 private:
+    void read_id();
+    void read_sr();
+    void read_cr();
+    void wren();
+    void wrr();
+    void read(const uint32_t addr, uint32_t count);
+    
+    void fill_tx_fifo(const uint32_t count, const uint32_t pattern = 0);
+    void write_tx_fifo(const uint32_t *data, const uint32_t count);
+    void read_rx_fifo(const uint32_t count);
+    
+private:
+    uint32_t RxBuf[RXBUF_SIZE];
+    uint32_t RxIndex;
+    uint32_t CmdIndex;
+    bool     Launch;
     
 };
 //------------------------------------------------------------------------------
