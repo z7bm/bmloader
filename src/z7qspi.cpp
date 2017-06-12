@@ -72,9 +72,10 @@ void TQSpi::init(bool manmode)
                               QSPI_ENDIAN_MASK        +  //  little endian
                               QSPI_REF_CLK_MASK;         //  reserved, must be 0
                                                          //
-    __nop();
-    __nop();
-    set_bits_pa(QSPI_CONFIG_REG, SET_MASK, CLR_MASK);
+    CfgReg = read_pa(QSPI_CONFIG_REG);
+    CfgReg &= ~CLR_MASK;
+    CfgReg |=  SET_MASK;
+    write_pa(QSPI_CONFIG_REG, CfgReg);
     
     write_pa(QSPI_EN_REG, 1);                            // enable QSPI module
     

@@ -74,28 +74,22 @@
 class TQSpi
 {
 public:
-    TQSpi() : RxIndex(0), CmdIndex(0), Launch(false) 
+    TQSpi() : RxIndex(0), CmdIndex(0), CfgReg(0), Launch(false) 
     { 
-        
-        
-        for(uint32_t i = 0; i < 4; ++i)
-        {
-            
-        }
     }
     
     void init(bool manmode = true);
     
-    void cs_on  () { clr_bits_pa(QSPI_CONFIG_REG, QSPI_PCS_MASK); }
-    void cs_off () { set_bits_pa(QSPI_CONFIG_REG, QSPI_PCS_MASK); }
+    void cs_on()  { CfgReg &= ~QSPI_PCS_MASK; write_pa(QSPI_CONFIG_REG, CfgReg); }
+    void cs_off() { CfgReg |=  QSPI_PCS_MASK; write_pa(QSPI_CONFIG_REG, CfgReg); }
 
-    void man_cs_enable  () { set_bits_pa(QSPI_CONFIG_REG, QSPI_MANUAL_CS_MASK); }
-    void man_cs_disable () { clr_bits_pa(QSPI_CONFIG_REG, QSPI_MANUAL_CS_MASK); }
+    void man_cs_enable()  { CfgReg &= ~QSPI_MANUAL_CS_MASK; write_pa(QSPI_CONFIG_REG, CfgReg); }
+    void man_cs_disable() { CfgReg |=  QSPI_MANUAL_CS_MASK; write_pa(QSPI_CONFIG_REG, CfgReg); }
     
-    void manual_mode_on  () { set_bits_pa(QSPI_CONFIG_REG, QSPI_MAN_START_EN_MASK); }
-    void manual_mode_off () { clr_bits_pa(QSPI_CONFIG_REG, QSPI_MAN_START_EN_MASK); }
+    void manual_mode_on  () { CfgReg &= ~QSPI_MAN_START_EN_MASK; write_pa(QSPI_CONFIG_REG, CfgReg); }
+    void manual_mode_off () { CfgReg |=  QSPI_MAN_START_EN_MASK; write_pa(QSPI_CONFIG_REG, CfgReg); }
     
-    void start_transfer  () { set_bits_pa(QSPI_CONFIG_REG, QSPI_MAN_START_COM_MASK); }
+    void start_transfer()   { CfgReg |= QSPI_MAN_START_COM_MASK; write_pa(QSPI_CONFIG_REG, CfgReg); }
     
   //  uint32_t read_id() { write_pa(QSPI_TXD0_REG, 0x00000090); return read_pa(QSPI_RX_DATA_REG); }
     
@@ -165,6 +159,7 @@ private:
     uint32_t RxBuf[RXBUF_SIZE];
     uint32_t RxIndex;
     uint32_t CmdIndex;
+    volatile uint32_t CfgReg;     // "cache" access to QSPI_CONFIG_REG
     bool     Launch;
     
 };

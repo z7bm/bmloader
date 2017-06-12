@@ -31,7 +31,8 @@ int main()
     //  JE1
     set_bits_pa(GPIO_DIRM_0_REG, 1ul << 13);
     set_bits_pa(GPIO_OEN_0_REG,  1ul << 13);
-    set_bits_pa(GPIO_DATA_0_REG, 1ul << 13);
+    //set_bits_pa(GPIO_DATA_0_REG, 1ul << 13);
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );
     
     //  JE2
     set_bits_pa(GPIO_DIRM_0_REG, 1ul << 10);
