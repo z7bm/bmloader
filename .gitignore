@@ -9,4 +9,4 @@ src/version.h
 *.dat
 *.vpwhist*
 *.vtg
-
+ps_clock_registers.log
