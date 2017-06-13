@@ -62,7 +62,7 @@ void TQSpi::init(bool manmode)
                               QSPI_FIFO_WIDTH_MASK +     //  0b11: 32 bit, the only this value supported
                               QSPI_MODE_SEL_MASK   +     //  Master Mode on
                               QSPI_HOLDB_DR_MASK   +     //  
-                          //   (1ul << QSPI_BAUD_RATE_DIV_BPOS) +
+                             (1ul << QSPI_BAUD_RATE_DIV_BPOS) +
                               QSPI_CLK_PH_MASK     +     //
                               QSPI_CLK_POL_MASK;         //
         
@@ -162,7 +162,7 @@ void TQSpi::read()
 
     // issue command/address
     write_pa(QSPI_RX_THRES_REG, 1);
-    write_pa(QSPI_TXD1_REG,  cmdDOR);
+    write_pa(QSPI_TXD1_REG,  cmdQOR);
     start_transfer();
     while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
     read_pa(QSPI_RX_DATA_REG);  // drop command/address response
