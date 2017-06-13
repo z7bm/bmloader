@@ -11,10 +11,10 @@ void swi_isr_handler();
 void gpio_isr_handler();
 void default_isr_handler();
 
-const uint32_t RXBUF_SIZE = 1024;
+const uint32_t QSPI_BUF_SIZE = 1024;
 
-uint32_t RxBuf[RXBUF_SIZE];
-TQSpi QSpi(RxBuf);
+uint32_t QSpiBuf[QSPI_BUF_SIZE];
+TQSpi QSpi(QSpiBuf);
 
 //------------------------------------------------------------------------------
 int main() 

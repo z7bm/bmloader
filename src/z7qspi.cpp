@@ -149,7 +149,7 @@ void TQSpi::wrr()
 { 
     write_pa(QSPI_RX_THRES_REG, 1);
     cs_on();
-    write_pa(QSPI_TXD3_REG,  cmdWRR + (0x0 << 8) + (0x2 << 16)); 
+    write_pa(QSPI_TXD3_REG,  cmdWRR + (Buf[0] << 8) + (Buf[1] << 16)); 
     start_transfer();
     while( ! (read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
     cs_off();
@@ -217,7 +217,7 @@ void TQSpi::read()
         
         if( read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK )
         {
-            read_rx_fifo(Dest + RxIndex, rchunk);
+            read_rx_fifo(Buf + RxIndex, rchunk);
             RxIndex += rchunk;
             rcount -= rchunk;
             if(rcount <= 63)        

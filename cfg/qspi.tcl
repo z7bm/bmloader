@@ -38,11 +38,24 @@ proc wrvar {name data} {
 #-------------------------------------------------------------------------------
 proc rdres { {N 32} } {
     puts [ rdvar QSpi.Response ]
-    rdvar RxBuf $N
+    set qspi_buf [scan [lindex [rdvar QSpi.Buf] 1] %x]
+    mrd $qspi_buf $N
+}
+#-------------------------------------------------------------------------------
+# wait end-of-transaction
+proc wait_eot {} {     
+    while {1} {
+        set res [scan [lindex [rdvar QSpi.Launch] 1] %x]
+        if {$res == 0} {
+            break
+        }
+        puts "wait for end of transaction"
+    }
 }
 #-------------------------------------------------------------------------------
 proc lnch {} {
     wrvar QSpi.Launch 1
+    wait_eot
 }
 #-------------------------------------------------------------------------------
 proc read {addr n} {
@@ -71,7 +84,24 @@ proc read_cr {} {
     wrvar QSpi.CmdIndex 2
     lnch
     set res [scan [lindex [rdvar QSpi.Response] 1] %x]
+    puts "CR:  [format %02x [expr ($res & 0xff000000) >> 24 ] ]"
+}
+#-------------------------------------------------------------------------------
+proc wren {} {
+    wrvar QSpi.CmdIndex 4
+    lnch
+    set res [scan [lindex [rdvar QSpi.Response] 1] %x]
     puts "SR:  [format %02x [expr ($res & 0xff000000) >> 24 ] ]"
+}
+#-------------------------------------------------------------------------------
+proc wrr {regs} {
+    wren
+    wrvar QSpi.CmdIndex 5
+    set qspi_buf [scan [lindex [rdvar QSpi.Buf] 1] %x]
+    mwr $qspi_buf $regs
+    lnch
+    read_sr
+    read_cr
 }
 #-------------------------------------------------------------------------------
 

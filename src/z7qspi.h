@@ -77,7 +77,7 @@ public:
     TQSpi(uint32_t *buf) : CfgReg(0)
                          , CmdIndex(3)
                          , Address(0)
-                         , Dest(buf)
+                         , Buf(buf)
                          , Count(0)
                          , Response(0)
                          , Launch(false) 
@@ -166,7 +166,7 @@ private:
     volatile  uint32_t CfgReg;     // "cache" access to QSPI_CONFIG_REG
     uint32_t  CmdIndex;
     uint32_t  Address;
-    uint32_t *Dest;
+    uint32_t *Buf;
     uint32_t  Count;
     uint32_t  Response;            // service variable, contains result of the transaction
     bool      Launch;
