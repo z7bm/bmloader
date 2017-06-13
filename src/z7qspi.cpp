@@ -86,16 +86,16 @@ void TQSpi::run()
 {
     if(Launch)
     {
-        Launch = false;
         switch(CmdIndex)
         {
-        case 0: read_id();      break;
-        case 1: read_sr();      break;
-        case 2: read_cr();      break;
-        case 3: read(0, 1001);  break;
-        case 4: wren();         break;
-        case 5: wrr();          break;
+        case 0: read_id(); break;
+        case 1: read_sr(); break;
+        case 2: read_cr(); break;
+        case 3: read();    break;
+        case 4: wren();    break;
+        case 5: wrr();     break;
         }
+        Launch = false;
     }
 } 
 //------------------------------------------------------------------------------
@@ -108,8 +108,8 @@ void TQSpi::read_id()
     start_transfer();
     while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
     cs_off();
-    RxBuf[0] = read_pa(QSPI_RX_DATA_REG);
-    RxBuf[1] = read_pa(QSPI_RX_DATA_REG);
+    read_pa(QSPI_RX_DATA_REG);
+    Response = read_pa(QSPI_RX_DATA_REG);
 }
 //------------------------------------------------------------------------------
 void TQSpi::read_sr()
@@ -120,7 +120,7 @@ void TQSpi::read_sr()
     start_transfer();
     while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
     cs_off();
-    RxBuf[0] = read_pa(QSPI_RX_DATA_REG);
+    Response = read_pa(QSPI_RX_DATA_REG);
 }
 //------------------------------------------------------------------------------
 void TQSpi::read_cr()
@@ -131,7 +131,7 @@ void TQSpi::read_cr()
     start_transfer();
     while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
     cs_off();
-    RxBuf[0] = read_pa(QSPI_RX_DATA_REG);
+    Response = read_pa(QSPI_RX_DATA_REG);
 }
 //------------------------------------------------------------------------------
 void TQSpi::wren()
@@ -142,7 +142,7 @@ void TQSpi::wren()
     start_transfer();
     while( ! (read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
     cs_off();
-    RxBuf[0] = read_pa(QSPI_RX_DATA_REG);
+    Response = read_pa(QSPI_RX_DATA_REG);
 }
 //------------------------------------------------------------------------------
 void TQSpi::wrr()
@@ -153,30 +153,33 @@ void TQSpi::wrr()
     start_transfer();
     while( ! (read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
     cs_off();
-    RxBuf[0] = read_pa(QSPI_RX_DATA_REG);
+    Response = read_pa(QSPI_RX_DATA_REG);
 }
 //------------------------------------------------------------------------------
-void TQSpi::read(const uint32_t addr, uint32_t count)
+void TQSpi::read()
 {
-    RxIndex = 0;
     cs_on();
 
     // issue command/address
-    write_pa(QSPI_TXD0_REG,  cmdDOR + (addr << 8) );
-    write_pa(QSPI_TXD1_REG,  0); 
-    write_pa(QSPI_RX_THRES_REG, 2);
+    write_pa(QSPI_RX_THRES_REG, 1);
+    write_pa(QSPI_TXD1_REG,  cmdDOR);
     start_transfer();
     while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
     read_pa(QSPI_RX_DATA_REG);  // drop command/address response
-    read_pa(QSPI_RX_DATA_REG);  // drop dummy data response
 
+    uint32_t addr = __builtin_bswap32(Address); 
+    write_pa(QSPI_TXD0_REG, addr >> 8 );
+    start_transfer();
+    while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
+    read_pa(QSPI_RX_DATA_REG);  // drop dummy data response
 
     const uint32_t FIFO_SIZE  = 63;               // words
     const uint32_t CHUNK_SIZE = 32;               // words
           uint32_t rchunk;
 
     // data transfer
-    uint32_t rcount = count;
+    uint32_t count  = Count;
+    uint32_t rcount = Count;
     if(count > 63)
     {
         fill_tx_fifo(63);
@@ -194,6 +197,7 @@ void TQSpi::read(const uint32_t addr, uint32_t count)
     }
     
     start_transfer();
+    uint32_t RxIndex = 0;
     for(;;)
     {
         if( count && (read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_TX_FIFO_NOT_FULL_MASK) )
@@ -213,12 +217,16 @@ void TQSpi::read(const uint32_t addr, uint32_t count)
         
         if( read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK )
         {
-            read_rx_fifo(rchunk);
+            read_rx_fifo(Dest + RxIndex, rchunk);
+            RxIndex += rchunk;
             rcount -= rchunk;
             if(rcount <= 63)        
             {
-                if( rcount == 0 )
+                if(rcount == 0)
+                {
+                    Response = RxIndex;
                     break;
+                }
                 
                 write_pa(QSPI_RX_THRES_REG, rcount);
                 rchunk = rcount;
@@ -245,46 +253,13 @@ void TQSpi::write_tx_fifo(const uint32_t *data, const uint32_t count)
     }
 }
 //------------------------------------------------------------------------------
-void TQSpi::read_rx_fifo(const uint32_t count)
+void TQSpi::read_rx_fifo(uint32_t *dst, const uint32_t count)
 {
     for(uint32_t i = 0; i < count; ++i)
     {
-        RxBuf[RxIndex++] = read_pa(QSPI_RX_DATA_REG);
+        dst[i] = read_pa(QSPI_RX_DATA_REG);
     }
 }
 //------------------------------------------------------------------------------
-//void TQSpi::fast_read(const uint32_t addr, const uint32_t count)
-//{
-//    RxIndex = 0;
-//    write_pa(QSPI_RX_THRES_REG, 2);
-//    cs_on();
-//
-//    // issue command/address
-//    write_pa(QSPI_TXD0_REG,  cmdFAST_READ + (addr << 8) );
-//    write_pa(QSPI_TXD1_REG,  0);
-//    start_transfer();
-//    while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
-//    while( (read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) )
-//    {
-//        read_pa(QSPI_RX_DATA_REG);
-//    }
-//
-//    write_pa(QSPI_RX_THRES_REG, count/4);
-//    for(uint32_t i = 0; i < count/4; ++i)
-//    {
-//        write_pa(QSPI_TXD0_REG, 0);
-//    }
-//    start_transfer();
-//    while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
-//    for(uint32_t i = 0; i < count/4; ++i)
-//    {
-//        if( (read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) )
-//        {
-//            RxBuf[RxIndex++] = read_pa(QSPI_RX_DATA_REG);
-//        }
-//    }
-//    cs_off();
-//}
-////------------------------------------------------------------------------------
 
 
