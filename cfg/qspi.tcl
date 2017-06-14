@@ -69,36 +69,37 @@ proc read_id {} {
     wrvar QSpi.CmdIndex 0
     lnch
     set res [scan [lindex [rdvar QSpi.Response] 1] %x]
-    puts "Manufacturer ID:  [format %02x [expr ($res & 0x00ff0000) >> 16 ] ]"
-    puts "Device ID      :  [format %02x [expr ($res & 0xff000000) >> 24 ] ]"
+    puts "Manufacturer ID:  [format %02x [expr ($res & 0xff)] ]"
+    puts "Device ID      :  [format %02x [expr ($res & 0xff00) >> 8 ] ]"
 }
 #-------------------------------------------------------------------------------
 proc read_sr {} {
     wrvar QSpi.CmdIndex 1
     lnch
-    set res [scan [lindex [rdvar QSpi.Response] 1] %x]
-    puts "SR:  [format %02x [expr ($res & 0xff000000) >> 24 ] ]"
+    set response [scan [lindex [rdvar QSpi.Response] 1] %x]
+    set res [format %02x $response]
+    return [puts "SR: $res"]
 }
 #-------------------------------------------------------------------------------
 proc read_cr {} {
     wrvar QSpi.CmdIndex 2
     lnch
-    set res [scan [lindex [rdvar QSpi.Response] 1] %x]
-    puts "CR:  [format %02x [expr ($res & 0xff000000) >> 24 ] ]"
+    set response [scan [lindex [rdvar QSpi.Response] 1] %x]
+    set res [format %02x $response]
+    return [puts "CR: $res"]
 }
 #-------------------------------------------------------------------------------
 proc wren {} {
     wrvar QSpi.CmdIndex 4
     lnch
-    set res [scan [lindex [rdvar QSpi.Response] 1] %x]
-    puts "SR:  [format %02x [expr ($res & 0xff000000) >> 24 ] ]"
+    read_sr
 }
 #-------------------------------------------------------------------------------
-proc wrr {regs} {
+proc wrr {sr cr} {
     wren
     wrvar QSpi.CmdIndex 5
     set qspi_buf [scan [lindex [rdvar QSpi.Buf] 1] %x]
-    mwr $qspi_buf $regs
+    mwr $qspi_buf [expr $sr + ($cr << 8)]
     lnch
     read_sr
     read_cr

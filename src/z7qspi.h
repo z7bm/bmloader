@@ -150,17 +150,18 @@ public:
     };
     
 public:
-    void read_id();
-    void read_sr();
-    void read_cr();
-    void wren();
-    void wrr();
-    void read();
+    uint16_t read_id();
+    uint8_t  read_sr();
+    uint8_t  read_cr();
+    void     wren();
+    void     wrr(uint16_t regs);   // regs[7:0] - SR; regs[15:8] - CR 
+    void     read(const uint32_t addr, uint32_t * const dst, uint32_t count);
+    void     erase();
     
 private:
     void fill_tx_fifo  (const uint32_t count, const uint32_t pattern = 0);
     void write_tx_fifo (const uint32_t *data, const uint32_t count);
-    void read_rx_fifo  (uint32_t       *dst,  const uint32_t count);
+    void read_rx_fifo  (uint32_t * const dst, const uint32_t count);
     
 private:
     volatile  uint32_t CfgReg;     // "cache" access to QSPI_CONFIG_REG
