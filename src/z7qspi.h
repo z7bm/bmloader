@@ -149,6 +149,18 @@ public:
         RXBUF_SIZE = 1024
     };
     
+    enum TStatusRegBitMask
+    {
+        SRWD  = 1ul << 7,
+        P_ERR = 1ul << 6,
+        E_ERR = 1ul << 5,
+        BP2   = 1ul << 4,
+        BP1   = 1ul << 3,
+        BP0   = 1ul << 2,
+        WEL   = 1ul << 1,
+        WIP   = 1ul << 0
+    };
+    
 public:
     uint16_t read_id();
     uint8_t  read_sr();
@@ -156,7 +168,11 @@ public:
     void     wren();
     void     wrr(uint16_t regs);   // regs[7:0] - SR; regs[15:8] - CR 
     void     read(const uint32_t addr, uint32_t * const dst, uint32_t count);
-    void     erase();
+
+    void     p4erase(const uint32_t addr);
+    void     serase (const uint32_t addr);
+    
+    INLINE bool wip() { return read_sr() & WIP; }
     
 private:
     void fill_tx_fifo  (const uint32_t count, const uint32_t pattern = 0);

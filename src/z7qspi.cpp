@@ -94,6 +94,7 @@ void TQSpi::run()
         case 3: read(Address, Buf, Count); break;
         case 4: wren();                    break;
         case 5: wrr(Buf[0]);               break;
+        case 6: serase(Address);           break;
         }
         Launch = false;
     }
@@ -121,7 +122,6 @@ uint8_t TQSpi::read_sr()
     while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
     cs_off();
     return read_pa(QSPI_RX_DATA_REG) >> 24;
-    
 }
 //------------------------------------------------------------------------------
 uint8_t TQSpi::read_cr()
@@ -148,6 +148,7 @@ void TQSpi::wren()
 //------------------------------------------------------------------------------
 void TQSpi::wrr(uint16_t regs)      // regs[7:0] - SR; regs[15:8] - CR
 { 
+    wren();
     write_pa(QSPI_RX_THRES_REG, 1);
     cs_on();
     write_pa(QSPI_TXD3_REG,  cmdWRR + ( regs << 8) ); 
@@ -155,6 +156,21 @@ void TQSpi::wrr(uint16_t regs)      // regs[7:0] - SR; regs[15:8] - CR
     while( ! (read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
     cs_off();
     read_pa(QSPI_RX_DATA_REG);
+}
+//------------------------------------------------------------------------------
+void TQSpi::serase(const uint32_t addr)
+{
+    wren();
+    write_pa(QSPI_RX_THRES_REG, 1);
+    cs_on();
+    uint32_t rev_addr = __builtin_bswap32(addr) >> 8; 
+    write_pa(QSPI_TXD0_REG,  cmdSE + ( rev_addr << 8) ); 
+    start_transfer();
+    while( ! (read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
+    cs_off();
+    read_pa(QSPI_RX_DATA_REG);
+
+    while( wip() ) { }
 }
 //------------------------------------------------------------------------------
 void TQSpi::read(const uint32_t addr, uint32_t * const dst, uint32_t count)

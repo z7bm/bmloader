@@ -49,7 +49,6 @@ proc wait_eot {} {
         if {$res == 0} {
             break
         }
-        puts "wait for end of transaction"
     }
 }
 #-------------------------------------------------------------------------------
@@ -96,13 +95,18 @@ proc wren {} {
 }
 #-------------------------------------------------------------------------------
 proc wrr {sr cr} {
-    wren
     wrvar QSpi.CmdIndex 5
     set qspi_buf [scan [lindex [rdvar QSpi.Buf] 1] %x]
     mwr $qspi_buf [expr $sr + ($cr << 8)]
     lnch
     read_sr
     read_cr
+}
+#-------------------------------------------------------------------------------
+proc serase {addr} {
+    wrvar QSpi.CmdIndex 6
+    wrvar QSpi.Address  $addr
+    lnch
 }
 #-------------------------------------------------------------------------------
 
