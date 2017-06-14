@@ -50,7 +50,7 @@ SourceFiles  = []
 #
 #MCU          = 'stm32f2xx'
 
-Optimization =' -O3 '
+Optimization =' -O2 '
 DebugLevel   =' -g3 '          # empty to disable debug info
 
 ExtraFlags    = ' '# + ' -DNDEBUG '
