@@ -110,8 +110,8 @@ void gpio_isr_handler()
     write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | (1ul << 7) );
     write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | 0 );
 
-    //write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | (1ul << 13) );  // JE1
-    //write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );
+    //write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | (1ul << 13) );  // JE1 on
+    //write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );            // JE1 off
 }
 //------------------------------------------------------------------------------
 void swi_isr_handler()
@@ -120,8 +120,8 @@ void swi_isr_handler()
     write_pa(GPIO_MASK_DATA_0_MSW_REG, (~(1ul << 0) << 16) | (1ul << 0) );
     write_pa(GPIO_MASK_DATA_0_MSW_REG, (~(1ul << 0) << 16) | 0 );
     
-    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | (1ul << 10) );  // JE2
-    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | 0 );
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | (1ul << 10) );  // JE2 on
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | 0 );            // JE2 off
 
 }
 //------------------------------------------------------------------------------

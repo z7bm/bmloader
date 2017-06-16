@@ -109,4 +109,24 @@ proc serase {addr} {
     lnch
 }
 #-------------------------------------------------------------------------------
+proc write {addr n} {
+    wrvar QSpi.CmdIndex 7
+    wrvar QSpi.Address  $addr
+    wrvar QSpi.Count    $n
+    lnch
+}
+#-------------------------------------------------------------------------------
+proc range {{from 0} {to 1} {step 1}} {
+    if {$step < 0} {
+        set op ::tcl::mathop::>
+    } else {
+        set op ::tcl::mathop::<
+    }
+    for {set n $from} {[$op $n $to]} {set n [expr {$n + $step}]} {
+        lappend res $n
+    }
+    return $res 
+}
+
+#-------------------------------------------------------------------------------
 

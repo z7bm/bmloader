@@ -82,19 +82,22 @@ void TQSpi::init(bool manmode)
     
 }
 //------------------------------------------------------------------------------
+uint32_t TxBuf[1024];
+
 void TQSpi::run()
 {
     if(Launch)
     {
         switch(CmdIndex)
         {
-        case 0: Response = read_id();      break;
-        case 1: Response = read_sr();      break;
-        case 2: Response = read_cr();      break;
-        case 3: read(Address, Buf, Count); break;
-        case 4: wren();                    break;
-        case 5: wrr(Buf[0]);               break;
-        case 6: serase(Address);           break;
+        case 0: Response = read_id();         break;
+        case 1: Response = read_sr();         break;
+        case 2: Response = read_cr();         break;
+        case 3: read(Address, Buf, Count);    break;
+        case 4: wren();                       break;
+        case 5: wrr(Buf[0]);                  break;
+        case 6: serase(Address);              break;
+        case 7: write(Address, TxBuf, Count); break;
         }
         Launch = false;
     }
@@ -169,8 +172,44 @@ void TQSpi::serase(const uint32_t addr)
     while( ! (read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
     cs_off();
     read_pa(QSPI_RX_DATA_REG);
+}
+//------------------------------------------------------------------------------
+void TQSpi::program_page(const uint32_t addr, const uint32_t *data)
+{
+    wren();
+    cs_on();
+    uint32_t rev_addr = __builtin_bswap32(addr) >> 8; 
+    write_pa(QSPI_TXD0_REG,  cmdQPP + ( rev_addr << 8) ); 
 
+    const uint32_t CHUNK0 = 16;
+    const uint32_t CHUNK1 = PAGE_SIZE - CHUNK0;
+    
+
+    write_pa( QSPI_TX_THRES_REG, FIFO_SIZE -  CHUNK1 );
+    write_tx_fifo(data, CHUNK0);
+
+    start_transfer();
+
+    while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_TX_FIFO_NOT_FULL_MASK) ) { }
+    write_tx_fifo(data + CHUNK0, CHUNK1);
+
+    write_pa(QSPI_TX_THRES_REG, 1);
+    while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_TX_FIFO_NOT_FULL_MASK) ) { }
+
+    cs_off();
+    flush_rx_fifo();
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | (1ul << 13) );  // JE1 on
     while( wip() ) { }
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );            // JE1 off
+}
+//------------------------------------------------------------------------------
+void TQSpi::write(const uint32_t addr, const uint32_t *data, const uint32_t count)
+{
+    const uint32_t CHUNKS = count/PAGE_SIZE;
+    for(uint32_t i = 0; i < CHUNKS; ++i)
+    {
+        program_page(addr + i*PAGE_SIZE, data + i*PAGE_SIZE);
+    }
 }
 //------------------------------------------------------------------------------
 void TQSpi::read(const uint32_t addr, uint32_t * const dst, uint32_t count)
@@ -182,16 +221,15 @@ void TQSpi::read(const uint32_t addr, uint32_t * const dst, uint32_t count)
     write_pa(QSPI_TXD1_REG,  cmdQOR);
     start_transfer();
     while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
-    read_pa(QSPI_RX_DATA_REG);  // drop command/address response
+    read_pa(QSPI_RX_DATA_REG);      // drop command/address response
 
     uint32_t rev_addr = __builtin_bswap32(addr); 
     write_pa(QSPI_TXD0_REG, rev_addr >> 8 );
     start_transfer();
     while( !(read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK) ) { }
-    read_pa(QSPI_RX_DATA_REG);  // drop dummy data response
+    read_pa(QSPI_RX_DATA_REG);      // drop dummy data response
 
-    const uint32_t FIFO_SIZE  = 63;               // words
-    const uint32_t CHUNK_SIZE = 32;               // words
+    const uint32_t CHUNK_SIZE = 32; // words
           uint32_t rchunk;
 
     // data transfer
@@ -221,7 +259,6 @@ void TQSpi::read(const uint32_t addr, uint32_t * const dst, uint32_t count)
             if(count > CHUNK_SIZE)
             {
                 fill_tx_fifo(CHUNK_SIZE);
-               // start_transfer();
                 count -= CHUNK_SIZE;
             }
             else 
@@ -235,7 +272,7 @@ void TQSpi::read(const uint32_t addr, uint32_t * const dst, uint32_t count)
         {
             read_rx_fifo(dst + RxIndex, rchunk);
             RxIndex += rchunk;
-            rcount -= rchunk;
+            rcount  -= rchunk;
             if(rcount <= 63)        
             {
                 if(rcount == 0)
@@ -274,6 +311,16 @@ void TQSpi::read_rx_fifo(uint32_t * const dst, const uint32_t count)
     for(uint32_t i = 0; i < count; ++i)
     {
         dst[i] = read_pa(QSPI_RX_DATA_REG);
+    }
+}
+//------------------------------------------------------------------------------
+void TQSpi::flush_rx_fifo()
+{
+    write_pa(QSPI_RX_THRES_REG, 1);
+    while( read_pa(QSPI_INT_STS_REG) & QSPI_INT_STS_RX_FIFO_NOT_EMPTY_MASK ) 
+    { 
+        read_pa(QSPI_RX_DATA_REG);
+
     }
 }
 //------------------------------------------------------------------------------

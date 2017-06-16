@@ -145,8 +145,8 @@ public:
     
     enum TBufSize
     {
-        TXBUF_SIZE = 64,
-        RXBUF_SIZE = 1024
+        FIFO_SIZE = 63,               // words
+        PAGE_SIZE = 64                // words
     };
     
     enum TStatusRegBitMask
@@ -167,10 +167,14 @@ public:
     uint8_t  read_cr();
     void     wren();
     void     wrr(uint16_t regs);   // regs[7:0] - SR; regs[15:8] - CR 
+
     void     read(const uint32_t addr, uint32_t * const dst, uint32_t count);
 
     void     p4erase(const uint32_t addr);
     void     serase (const uint32_t addr);
+    
+    void     program_page(const uint32_t addr, const uint32_t *data);
+    void     write(const uint32_t addr, const uint32_t *data, const uint32_t count);
     
     INLINE bool wip() { return read_sr() & WIP; }
     
@@ -178,6 +182,7 @@ private:
     void fill_tx_fifo  (const uint32_t count, const uint32_t pattern = 0);
     void write_tx_fifo (const uint32_t *data, const uint32_t count);
     void read_rx_fifo  (uint32_t * const dst, const uint32_t count);
+    void flush_rx_fifo();
     
 private:
     volatile  uint32_t CfgReg;     // "cache" access to QSPI_CONFIG_REG
