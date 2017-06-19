@@ -72,9 +72,9 @@
             Name="Scripts"
             Filters="">
             <F N="cfg/fsbl.ld.S"/>
-            <F N="cfg/script/scmIC.py"/>
+            <F N="script/scmIC.py"/>
             <F N="SConstruct"/>
-            <F N="cfg/script/utils.py"/>
+            <F N="script/utils.py"/>
         </Folder>
     </Files>
 </Project>

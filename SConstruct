@@ -21,7 +21,7 @@ import fnmatch
 from intelhex import IntelHex
 from datetime import datetime
 
-sys.path.append(os.getcwd() + '/cfg/script')
+sys.path.append(os.getcwd() + '/script')
 
 import utils
 import scmIC
@@ -48,7 +48,6 @@ SourceFiles  = []
 #
 #     Options
 #
-#MCU          = 'stm32f2xx'
 
 Optimization =' -O2 '
 DebugLevel   =' -g3 '          # empty to disable debug info
