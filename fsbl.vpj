@@ -56,23 +56,25 @@
             <F N="src/cpu_init.S"/>
             <F N="src/exc.cpp"/>
             <F N="src/main.cpp"/>
-            <F N="src/ps7common.h"/>
-            <F N="src/ps7int.cpp"/>
             <F N="src/startup.c"/>
             <F N="src/translation_table.S"/>
+            <F N="src/z7int.cpp"/>
+            <F N="src/z7qspi.cpp"/>
         </Folder>
         <Folder
             Name="Header Files"
             Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
-            <F N="src/ps7int.h"/>
+            <F N="src/z7common.h"/>
+            <F N="src/z7int.h"/>
+            <F N="src/z7qspi.h"/>
         </Folder>
         <Folder
             Name="Scripts"
             Filters="">
             <F N="cfg/fsbl.ld.S"/>
-            <F N="cfg/script/scmIC.py"/>
+            <F N="script/scmIC.py"/>
             <F N="SConstruct"/>
-            <F N="cfg/script/utils.py"/>
+            <F N="script/utils.py"/>
         </Folder>
     </Files>
 </Project>

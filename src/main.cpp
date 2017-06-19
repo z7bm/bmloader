@@ -1,7 +1,8 @@
 
 #include <ps7mmrs.h>
 #include "ps7_init.h"
-#include "ps7int.h"
+#include "z7int.h"
+#include "z7qspi.h"
 
                
 const uint32_t PIN_INT = 50;
@@ -9,6 +10,11 @@ const uint32_t PIN_INT = 50;
 void swi_isr_handler();
 void gpio_isr_handler();
 void default_isr_handler();
+
+const uint32_t QSPI_BUF_SIZE = 1024;
+
+uint32_t QSpiBuf[QSPI_BUF_SIZE];
+TQSpi QSpi(QSpiBuf);
 
 //------------------------------------------------------------------------------
 int main() 
@@ -28,7 +34,8 @@ int main()
     //  JE1
     set_bits_pa(GPIO_DIRM_0_REG, 1ul << 13);
     set_bits_pa(GPIO_OEN_0_REG,  1ul << 13);
-    set_bits_pa(GPIO_DATA_0_REG, 1ul << 13);
+    //set_bits_pa(GPIO_DATA_0_REG, 1ul << 13);
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );
     
     //  JE2
     set_bits_pa(GPIO_DIRM_0_REG, 1ul << 10);
@@ -63,7 +70,6 @@ int main()
         gic_int_enable(PS7IRQ_ID_GPIO);
         
         set_bits_pa(GIC_ICCPMR, 0xff);
-        asm volatile ("    nop");
         gic_set_priority(PS7IRQ_ID_SW7, 0x10);
         
         
@@ -73,16 +79,21 @@ int main()
 
     enable_interrupts();
     
+    QSpi.init();
+
     for(;;)
     {
-        asm volatile ("    nop");
-        asm volatile ("    nop");
+        
+        QSpi.run();
+        
+//      write_pa( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
+//               (2 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
+//                PS7IRQ_ID_SW7                                 // rise software interrupt ID15
+//              );
 
-        write_pa( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
-                 (2 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
-                  PS7IRQ_ID_SW7                                 // rise software interrupt ID15
-                );
-
+        
+        
+        
 //      write_pa( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
 //               (0 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
 //               (0x01 << GIC_ICDSGIR_CPU_TARGET_LIST_BPOS) +   //
@@ -99,8 +110,8 @@ void gpio_isr_handler()
     write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | (1ul << 7) );
     write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | 0 );
 
-    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | (1ul << 13) );  // JE1
-    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );
+    //write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | (1ul << 13) );  // JE1 on
+    //write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );            // JE1 off
 }
 //------------------------------------------------------------------------------
 void swi_isr_handler()
@@ -109,8 +120,8 @@ void swi_isr_handler()
     write_pa(GPIO_MASK_DATA_0_MSW_REG, (~(1ul << 0) << 16) | (1ul << 0) );
     write_pa(GPIO_MASK_DATA_0_MSW_REG, (~(1ul << 0) << 16) | 0 );
     
-    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | (1ul << 10) );  // JE2
-    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | 0 );
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | (1ul << 10) );  // JE2 on
+    write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | 0 );            // JE2 off
 
 }
 //------------------------------------------------------------------------------

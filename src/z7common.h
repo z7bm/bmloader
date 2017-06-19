@@ -45,20 +45,10 @@
 //
 //    Physical address access
 //
-INLINE void write_pa(uintptr_t addr, const uint32_t data)
-{
-    *( reinterpret_cast<volatile uint32_t*>(addr) ) =  data;
-}
-//------------------------------------------------------------------------------
-INLINE uint32_t read_pa(uintptr_t addr)
-{
-    return *( reinterpret_cast<volatile uint32_t*>(addr) );
-}
-//------------------------------------------------------------------------------
-INLINE void set_bits_pa(uintptr_t addr, const uint32_t mask)
-{
-    *( reinterpret_cast<volatile uint32_t*>(addr) ) |=  mask;
-}
+INLINE void     write_pa(uintptr_t addr, const uint32_t data)    { *( reinterpret_cast<volatile uint32_t*>(addr) ) =  data;  }
+INLINE uint32_t read_pa (uintptr_t addr)                         { return *( reinterpret_cast<volatile uint32_t*>(addr) );   }
+INLINE void     clr_bits_pa(uintptr_t addr, const uint32_t mask) { *( reinterpret_cast<volatile uint32_t*>(addr) ) &= ~mask; }
+INLINE void     set_bits_pa(uintptr_t addr, const uint32_t mask) { *( reinterpret_cast<volatile uint32_t*>(addr) ) |=  mask; }
 //------------------------------------------------------------------------------
 INLINE void set_bits_pa(uintptr_t addr, const uint32_t mask, const uint32_t bfmask)
 {
@@ -67,12 +57,6 @@ INLINE void set_bits_pa(uintptr_t addr, const uint32_t mask, const uint32_t bfma
     reg &= ~bfmask;
     reg |=  mask;
     *( reinterpret_cast<volatile uint32_t*>(addr) ) = reg;
-
-}
-//------------------------------------------------------------------------------
-INLINE void clr_bits_pa(uintptr_t addr, const uint32_t mask)
-{
-    *( reinterpret_cast<volatile uint32_t*>(addr) ) &= ~mask;
 }
 //------------------------------------------------------------------------------
 //
